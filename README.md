@@ -8,7 +8,7 @@ This project demonstrates how to use Chainlink Low Latency price feeds - part of
 
 ## Architecture overview
 
-![Architecture Overview](/img/arch-overview.png)
+
 
 ## Frontend
 
