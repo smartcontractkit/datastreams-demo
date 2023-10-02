@@ -16,6 +16,7 @@ import { Form, FormField, FormItem, FormLabel } from "@/components//ui/form";
 import { linkAddress, symbols, usdcAddress } from "@/config/trade";
 import { useDatafeed } from "@/app/datafeed-provider";
 import { Pair } from "@/_types";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const formSchema = z.object({
   from: z.coerce.number().gt(0),
@@ -75,6 +76,16 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                     type="number"
                     className="rounded-none border-0 p-0 text-[40px] font-medium leading-[52px] -tracking-[0.8px] [appearance:textfield] focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     {...field}
+                    onChange={(e) => {
+                      if (Number(e.target.value) < 0) {
+                        return;
+                      }
+                      form.setValue(
+                        "to",
+                        Number(e.target.value) / Number(prices[pair]),
+                      );
+                      field.onChange(e);
+                    }}
                   />
                 </FormItem>
               )}
@@ -119,6 +130,16 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                     type="number"
                     className="rounded-none border-0 p-0 text-[40px] font-medium leading-[52px] -tracking-[0.8px] [appearance:textfield] focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     {...field}
+                    onChange={(e) => {
+                      if (Number(e.target.value) < 0) {
+                        return;
+                      }
+                      form.setValue(
+                        "from",
+                        Number(e.target.value) * Number(prices[pair]),
+                      );
+                      field.onChange(e);
+                    }}
                   />
                 </FormItem>
               )}
