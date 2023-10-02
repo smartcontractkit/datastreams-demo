@@ -141,7 +141,7 @@ export default function RootLayout({
                         dApp with Chainlink Data Streams.
                       </p>
                       <a
-                        href="https://github.com/smartcontractkit/low-latency-demo"
+                        href="https://github.com/smartcontractkit/datastreams-demo"
                         target="_blank"
                         rel="noreferrer"
                         className="mt-4 flex items-center space-x-[8px] text-base font-bold leading-4 underline hover:brightness-125"
