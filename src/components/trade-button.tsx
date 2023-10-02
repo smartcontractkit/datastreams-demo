@@ -5,6 +5,7 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAccount, useBalance } from "wagmi";
+import { parseUnits } from "viem";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
@@ -21,8 +22,8 @@ import { Pair } from "@/_types";
 import { linkAddress, symbols, usdcAddress } from "@/config/trade";
 
 const formSchema = z.object({
-  from: z.coerce.number().gte(0),
-  to: z.coerce.number(),
+  from: z.coerce.number().gt(0),
+  to: z.coerce.number().gt(0),
 });
 
 export const TradeButton = ({ pair }: { pair: Pair }) => {
@@ -34,8 +35,6 @@ export const TradeButton = ({ pair }: { pair: Pair }) => {
   const { data: tokenABalance } = useBalance({ address, token: tokenA });
   const { data: tokenBBalance } = useBalance({ address, token: tokenB });
 
-  console.log(tokenABalance, tokenBBalance);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,26 +44,45 @@ export const TradeButton = ({ pair }: { pair: Pair }) => {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    const amountA = parseUnits(`${values.from}`, tokenABalance?.decimals ?? 0);
+    const amountB = parseUnits(`${values.to}`, tokenBBalance?.decimals ?? 0);
+    if (amountA > (tokenABalance?.value ?? BigInt(0))) {
+      toast({
+        title: "Error:",
+        description: "Insufficient Balance",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Swap completed:",
+      description: `${values.from} ${tokenABalance?.symbol} for ${values.to} ${tokenBBalance?.symbol}`,
+      variant: "success",
+    });
   }
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
+      {isConnected ? (
+        <DialogTrigger asChild>
+          <Button className="w-[156px] bg-[#375BD2] py-3 text-base font-black leading-4 hover:bg-[#375BD2]/90">
+            Trade
+          </Button>
+        </DialogTrigger>
+      ) : (
         <Button
           className="w-[156px] bg-[#375BD2] py-3 text-base font-black leading-4 hover:bg-[#375BD2]/90"
-          onClick={() => {
-            if (!isConnected) {
-              toast({
-                title: "Connect wallet: To place a trade, please connect",
-                // description: "To place a trade, please connect",
-              });
-            }
-          }}
+          onClick={() =>
+            toast({
+              title: "Connect wallet:",
+              description: "To place a trade, please connect",
+            })
+          }
         >
           Trade
         </Button>
-      </DialogTrigger>
+      )}
       <DialogContent className="max-w-[400px] bg-[#181D29] pt-8 sm:max-w-[400px]">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
