@@ -1,14 +1,14 @@
-# Chainlink Low Latency Data Feeds Demo
+# Chainlink Data Streams Demo dApp
 
 > **Note**
 >
 > _This demo represents an educational example to use a Chainlink system, product, or service and is provided to demonstrate how to interact with Chainlink’s systems, products, and services to integrate them into your own. This template is provided “AS IS” and “AS AVAILABLE” without warranties of any kind, it has not been audited, and it may be missing key checks or error handling to make the usage of the system, product or service more clear. Do not use the code in this example in a production environment without completing your own audits and application of best practices. Neither Chainlink Labs, the Chainlink Foundation, nor Chainlink node operators are responsible for unintended outputs that are generated due to errors in code._
 
-This project demonstrates how to use Chainlink Low Latency price feeds - part of Chainlink’s family of low-latency, hybrid price feed solutions in a full-stack implementation.
+This project demonstrates how to use Chainlink Data Streams - part of Chainlink’s family of low-latency, hybrid price feed solutions in a full-stack implementation.
 
 ## Architecture overview
 
-
+![Architecture Overview](/img/arch-overview.png)
 
 ## Frontend
 
@@ -47,3 +47,7 @@ Run `npm run dev` in your terminal, and then open [localhost:3000](http://localh
 - [RainbowKit](https://www.rainbowkit.com/)
 - [wagmi](https://wagmi.sh/) & [viem](https://viem.sh/)
 - [shadcn/ui](https://ui.shadcn.com/)
+
+## Questions?
+
+You can [open an issue](https://github.com/smartcontractkit/datastreams-demo/issues) or drop us a line on [Discord](https://discord.com/invite/chainlink).
