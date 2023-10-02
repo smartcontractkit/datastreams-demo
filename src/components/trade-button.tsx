@@ -174,9 +174,12 @@ export const TradeButton = ({ pair }: { pair: Pair }) => {
                 </div>
               </div>
             </div>
+            <div className="mt-2 text-xs font-[450] text-secondary-foreground">
+              Note: swap values are approximate
+            </div>
             <Button
               type="submit"
-              className="mt-6 w-full bg-[#375BD2] text-base font-black leading-4 text-foreground hover:bg-[#375BD2]/90"
+              className="w-full bg-[#375BD2] text-base font-black leading-4 text-foreground hover:bg-[#375BD2]/90"
             >
               Swap
             </Button>
