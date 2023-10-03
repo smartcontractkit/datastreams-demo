@@ -4,7 +4,7 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { parseUnits } from "viem";
+import { Address, parseUnits } from "viem";
 import { useAccount, useBalance } from "wagmi";
 
 import { toast } from "@/components/ui/use-toast";
@@ -16,7 +16,7 @@ import { Form, FormField, FormItem, FormLabel } from "@/components//ui/form";
 import { linkAddress, symbols, usdcAddress } from "@/config/trade";
 import { useDatafeed } from "@/app/datafeed-provider";
 import { Pair } from "@/_types";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useState } from "react";
 
 const formSchema = z.object({
   from: z.coerce.number().gt(0),
@@ -27,8 +27,10 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
   const { address } = useAccount();
   const { prices } = useDatafeed();
 
-  const tokenA = usdcAddress;
-  const tokenB = pair === Pair.LINK_USD ? linkAddress : undefined;
+  const [tokenA, setTokenA] = useState<Address | undefined>(usdcAddress);
+  const [tokenB, setTokenB] = useState<Address | undefined>(
+    pair === Pair.LINK_USD ? linkAddress : undefined,
+  );
   const { data: tokenABalance } = useBalance({ address, token: tokenA });
   const { data: tokenBBalance } = useBalance({ address, token: tokenB });
 
@@ -82,7 +84,9 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                       }
                       form.setValue(
                         "to",
-                        Number(e.target.value) / Number(prices[pair]),
+                        tokenA === usdcAddress
+                          ? Number(e.target.value) / Number(prices[pair])
+                          : Number(e.target.value) * Number(prices[pair]),
                       );
                       field.onChange(e);
                     }}
@@ -114,7 +118,23 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
           </div>
           <div className="flex w-full items-center space-x-6">
             <div className="h-[1px] flex-1 bg-border" />
-            <Image src="/sync-arrows.svg" height={16} width={16} alt="arrows" />
+            <Button
+              variant="ghost"
+              onClick={(e) => {
+                e.preventDefault();
+                setTokenA(tokenB);
+                setTokenB(tokenA);
+                const values = form.getValues();
+                form.reset({ from: values.to, to: values.from });
+              }}
+            >
+              <Image
+                src="/sync-arrows.svg"
+                height={16}
+                width={16}
+                alt="arrows"
+              />
+            </Button>
             <div className="h-[1px] flex-1 bg-border" />
           </div>
           <div className="grid w-full grid-cols-2">
@@ -136,7 +156,9 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                       }
                       form.setValue(
                         "from",
-                        Number(e.target.value) * Number(prices[pair]),
+                        tokenA === usdcAddress
+                          ? Number(e.target.value) * Number(prices[pair])
+                          : Number(e.target.value) / Number(prices[pair]),
                       );
                       field.onChange(e);
                     }}
