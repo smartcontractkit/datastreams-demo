@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npx next telemetry disable"
   },
   "dependencies": {
     "@hackbg/lolsdk": "git+https://github.com/hackbg/chainlink-low-latency-consumer.git#8e68debef907923c24bbe44f4d6ad89b261386c2",
