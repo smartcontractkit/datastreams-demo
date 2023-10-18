@@ -4,8 +4,14 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { Address, parseUnits } from "viem";
-import { useAccount, useBalance } from "wagmi";
+import { Address, parseEther, parseUnits } from "viem";
+import {
+  useAccount,
+  useBalance,
+  useContractWrite,
+  usePrepareSendTransaction,
+  useSendTransaction,
+} from "wagmi";
 
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +23,7 @@ import { linkAddress, symbols, usdcAddress } from "@/config/trade";
 import { useDatafeed } from "@/app/datafeed-provider";
 import { Pair } from "@/_types";
 import { useState } from "react";
+import { wethConfig, proxyConfig, usdcConfig } from "@/config/contracts";
 
 const formSchema = z.object({
   from: z.coerce.number().gt(0),
@@ -41,9 +48,64 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const fromAmount = form.watch("from");
+
+  const { config } = usePrepareSendTransaction({
+    to: wethConfig.address,
+    value: fromAmount ? parseEther(`${fromAmount}`) : undefined,
+  });
+  const { sendTransactionAsync: wrapEth } = useSendTransaction(config);
+
+  const { writeAsync: approveWeth } = useContractWrite({
+    ...wethConfig,
+    functionName: "approve",
+    onError(error) {
+      toast({
+        variant: "destructive",
+        title: error.name,
+        description: error.message,
+      });
+    },
+    onSuccess() {
+      toast({
+        title: "Approve transaction has been sent",
+        description: "Waiting for confirmation",
+      });
+    },
+  });
+
+  const { write: trade } = useContractWrite({
+    ...proxyConfig,
+    functionName: "trade",
+    onError(error) {
+      toast({
+        variant: "destructive",
+        title: error.name,
+        description: error.message,
+      });
+    },
+    onSuccess() {
+      toast({
+        title: "Swap in progress",
+      });
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const amountA = parseUnits(`${values.from}`, tokenABalance?.decimals ?? 0);
     const amountB = parseUnits(`${values.to}`, tokenBBalance?.decimals ?? 0);
+    await wrapEth?.();
+    await approveWeth({
+      args: [proxyConfig.address, parseEther(`${fromAmount}`)],
+    });
+    trade({
+      args: [
+        wethConfig.address,
+        usdcConfig.address,
+        parseEther(`${fromAmount}`),
+      ],
+    });
+
     if (amountA > (tokenABalance?.value ?? BigInt(0))) {
       toast({
         title: "Error:",
