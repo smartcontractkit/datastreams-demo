@@ -179,7 +179,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
           </div>
           <div className="flex w-full items-center space-x-6">
             <div className="h-[1px] flex-1 bg-border" />
-            <Button
+            {/* <Button
               variant="ghost"
               onClick={(e) => {
                 e.preventDefault();
@@ -188,14 +188,9 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                 const values = form.getValues();
                 form.reset({ from: values.to, to: values.from });
               }}
-            >
-              <Image
-                src="/sync-arrows.svg"
-                height={16}
-                width={16}
-                alt="arrows"
-              />
-            </Button>
+            > */}
+            <Image src="/sync-arrows.svg" height={16} width={16} alt="arrows" />
+            {/* </Button> */}
             <div className="h-[1px] flex-1 bg-border" />
           </div>
           <div className="grid w-full grid-cols-2">
