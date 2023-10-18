@@ -26,11 +26,10 @@ const formSchema = z.object({
 const TradeDialog = ({ pair }: { pair: Pair }) => {
   const { address } = useAccount();
   const { prices } = useDatafeed();
-
-  const [tokenA, setTokenA] = useState<Address | undefined>(usdcAddress);
-  const [tokenB, setTokenB] = useState<Address | undefined>(
+  const [tokenA, setTokenA] = useState<Address | undefined>(
     pair === Pair.LINK_USD ? linkAddress : undefined,
   );
+  const [tokenB, setTokenB] = useState<Address | undefined>(usdcAddress);
   const { data: tokenABalance } = useBalance({ address, token: tokenA });
   const { data: tokenBBalance } = useBalance({ address, token: tokenB });
 
