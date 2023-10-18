@@ -16,9 +16,9 @@ export const binancePairs = {
 
 export const chainlinkPairToFeedId = {
   [Pair.ETH_USD]:
-    "0x00023496426b520583ae20a66d80484e0fc18544866a5b0bfee15ec771963274",
+    "0x00029584363bcf642315133c335b3646513c20f049602fc7d933be0d3f6360d3",
   [Pair.LINK_USD]:
-    "0x0002f18a75a7750194a6476c9ab6d51276952471bd90404904211a9d47f34e64",
+    "0x0002191c50b7bdaf2cb8672453141946eea123f8baeaa8d2afa4194b6955e683",
 };
 
 export type PriceResponse = {
