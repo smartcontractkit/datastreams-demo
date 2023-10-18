@@ -1,8 +1,8 @@
 export const siteConfig = {
-  name: "Chainlink LLDF Demo",
-  description: "Chainlink Low Latency Data Feed Demo",
+  name: "Chainlink Data Streams Demo dApp",
+  description: "Demo dApp running Chainlink Data Streams in a fullstack environment.",
   links: {
-    github: "https://github.com/smartcontractkit/low-latency-demo",
+    github: "https://github.com/smartcontractkit/datastreams-demo",
     twitter: "https://twitter.com/chainlink",
   },
 };
