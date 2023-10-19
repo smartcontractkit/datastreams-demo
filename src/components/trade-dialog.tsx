@@ -31,6 +31,7 @@ const formSchema = z.object({
 });
 
 const TradeDialog = ({ pair }: { pair: Pair }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { address } = useAccount();
   const { prices } = useDatafeed();
   const [tokenA, setTokenA] = useState<Address | undefined>(
@@ -49,7 +50,13 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
   });
 
   const fromAmount = form.watch("from");
-  const { sendTransactionAsync: wrapEth } = useSendTransaction();
+  const { sendTransactionAsync: wrapEth } = useSendTransaction({
+    onSuccess() {
+      toast({
+        title: `Wrapped ${fromAmount} ETH`,
+      });
+    },
+  });
 
   const { writeAsync: approveWeth } = useContractWrite({
     ...wethConfig,
@@ -64,12 +71,11 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
     onSuccess() {
       toast({
         title: "Approve transaction has been sent",
-        description: "Waiting for confirmation",
       });
     },
   });
 
-  const { write: trade } = useContractWrite({
+  const { writeAsync: trade } = useContractWrite({
     ...proxyConfig,
     functionName: "trade",
     onError(error) {
@@ -87,8 +93,18 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     const amountA = parseUnits(`${values.from}`, tokenABalance?.decimals ?? 0);
     const amountB = parseUnits(`${values.to}`, tokenBBalance?.decimals ?? 0);
+    if (amountA > (tokenABalance?.value ?? BigInt(0))) {
+      toast({
+        title: "Error:",
+        description: "Insufficient Balance",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
     await wrapEth({
       to: wethConfig.address,
       value: fromAmount ? parseEther(`${fromAmount}`) : undefined,
@@ -96,28 +112,19 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
     await approveWeth({
       args: [proxyConfig.address, parseEther(`${fromAmount}`)],
     });
-    trade({
+    await trade({
       args: [
         wethConfig.address,
         usdcConfig.address,
         parseEther(`${fromAmount}`),
       ],
     });
-
-    if (amountA > (tokenABalance?.value ?? BigInt(0))) {
-      toast({
-        title: "Error:",
-        description: "Insufficient Balance",
-        variant: "destructive",
-      });
-      return;
-    }
-
     toast({
       title: "Swap completed:",
       description: `${values.from} ${tokenABalance?.symbol} for ${values.to} ${tokenBBalance?.symbol}`,
       variant: "success",
     });
+    setIsLoading(false);
   }
 
   return (
@@ -254,6 +261,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
             Note: swap values are approximate
           </div>
           <Button
+            disabled={isLoading}
             type="submit"
             className="w-full bg-[#375BD2] text-base font-black leading-4 text-foreground hover:bg-[#375BD2]/90"
           >
