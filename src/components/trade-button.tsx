@@ -13,15 +13,20 @@ import {
 import TradeDialog from "@/components/trade-dialog";
 
 import { Pair } from "@/_types";
+import { useDatafeed } from "@/app/datafeed-provider";
 
 export const TradeButton = ({ pair }: { pair: Pair }) => {
   const { isConnected } = useAccount();
+  const { prices } = useDatafeed();
 
   return (
     <Dialog>
       {isConnected ? (
         <DialogTrigger asChild>
-          <Button className="w-[156px] bg-[#375BD2] py-3 text-base font-black leading-4 hover:bg-[#375BD2]/90">
+          <Button
+            disabled={!prices[pair]}
+            className="w-[156px] bg-[#375BD2] py-3 text-base font-black leading-4 hover:bg-[#375BD2]/90"
+          >
             Trade
           </Button>
         </DialogTrigger>

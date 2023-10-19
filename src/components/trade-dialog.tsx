@@ -4,8 +4,14 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { Address, parseUnits } from "viem";
-import { useAccount, useBalance } from "wagmi";
+import { Address, parseEther, parseUnits } from "viem";
+import {
+  useAccount,
+  useBalance,
+  useContractWrite,
+  usePrepareSendTransaction,
+  useSendTransaction,
+} from "wagmi";
 
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +23,7 @@ import { linkAddress, symbols, usdcAddress } from "@/config/trade";
 import { useDatafeed } from "@/app/datafeed-provider";
 import { Pair } from "@/_types";
 import { useState } from "react";
+import { wethConfig, proxyConfig, usdcConfig } from "@/config/contracts";
 
 const formSchema = z.object({
   from: z.coerce.number().gt(0),
@@ -24,13 +31,13 @@ const formSchema = z.object({
 });
 
 const TradeDialog = ({ pair }: { pair: Pair }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { address } = useAccount();
   const { prices } = useDatafeed();
-
-  const [tokenA, setTokenA] = useState<Address | undefined>(usdcAddress);
-  const [tokenB, setTokenB] = useState<Address | undefined>(
+  const [tokenA, setTokenA] = useState<Address | undefined>(
     pair === Pair.LINK_USD ? linkAddress : undefined,
   );
+  const [tokenB, setTokenB] = useState<Address | undefined>(usdcAddress);
   const { data: tokenABalance } = useBalance({ address, token: tokenA });
   const { data: tokenBBalance } = useBalance({ address, token: tokenB });
 
@@ -42,7 +49,51 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const fromAmount = form.watch("from");
+  const { sendTransactionAsync: wrapEth } = useSendTransaction({
+    onSuccess() {
+      toast({
+        title: `Wrapped ${fromAmount} ETH`,
+      });
+    },
+  });
+
+  const { writeAsync: approveWeth } = useContractWrite({
+    ...wethConfig,
+    functionName: "approve",
+    onError(error) {
+      toast({
+        variant: "destructive",
+        title: error.name,
+        description: error.message,
+      });
+    },
+    onSuccess() {
+      toast({
+        title: "Approve transaction has been sent",
+      });
+    },
+  });
+
+  const { writeAsync: trade } = useContractWrite({
+    ...proxyConfig,
+    functionName: "trade",
+    onError(error) {
+      toast({
+        variant: "destructive",
+        title: error.name,
+        description: error.message,
+      });
+    },
+    onSuccess() {
+      toast({
+        title: "Swap in progress",
+      });
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     const amountA = parseUnits(`${values.from}`, tokenABalance?.decimals ?? 0);
     const amountB = parseUnits(`${values.to}`, tokenBBalance?.decimals ?? 0);
     if (amountA > (tokenABalance?.value ?? BigInt(0))) {
@@ -51,14 +102,29 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
         description: "Insufficient Balance",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
-
+    await wrapEth({
+      to: wethConfig.address,
+      value: fromAmount ? parseEther(`${fromAmount}`) : undefined,
+    });
+    await approveWeth({
+      args: [proxyConfig.address, parseEther(`${fromAmount}`)],
+    });
+    await trade({
+      args: [
+        wethConfig.address,
+        usdcConfig.address,
+        parseEther(`${fromAmount}`),
+      ],
+    });
     toast({
       title: "Swap completed:",
       description: `${values.from} ${tokenABalance?.symbol} for ${values.to} ${tokenBBalance?.symbol}`,
       variant: "success",
     });
+    setIsLoading(false);
   }
 
   return (
@@ -85,7 +151,11 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                       form.setValue(
                         "to",
                         tokenA === usdcAddress
-                          ? Number(e.target.value) / Number(prices[pair])
+                          ? Math.round(
+                              (Number(e.target.value) + Number.EPSILON) * 100,
+                            ) /
+                              100 /
+                              Number(prices[pair])
                           : Number(e.target.value) * Number(prices[pair]),
                       );
                       field.onChange(e);
@@ -118,7 +188,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
           </div>
           <div className="flex w-full items-center space-x-6">
             <div className="h-[1px] flex-1 bg-border" />
-            <Button
+            {/* <Button
               variant="ghost"
               onClick={(e) => {
                 e.preventDefault();
@@ -127,14 +197,9 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                 const values = form.getValues();
                 form.reset({ from: values.to, to: values.from });
               }}
-            >
-              <Image
-                src="/sync-arrows.svg"
-                height={16}
-                width={16}
-                alt="arrows"
-              />
-            </Button>
+            > */}
+            <Image src="/sync-arrows.svg" height={16} width={16} alt="arrows" />
+            {/* </Button> */}
             <div className="h-[1px] flex-1 bg-border" />
           </div>
           <div className="grid w-full grid-cols-2">
@@ -158,7 +223,11 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                         "from",
                         tokenA === usdcAddress
                           ? Number(e.target.value) * Number(prices[pair])
-                          : Number(e.target.value) / Number(prices[pair]),
+                          : Math.round(
+                              (Number(e.target.value) + Number.EPSILON) * 100,
+                            ) /
+                              100 /
+                              Number(prices[pair]),
                       );
                       field.onChange(e);
                     }}
@@ -192,6 +261,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
             Note: swap values are approximate
           </div>
           <Button
+            disabled={isLoading}
             type="submit"
             className="w-full bg-[#375BD2] text-base font-black leading-4 text-foreground hover:bg-[#375BD2]/90"
           >
