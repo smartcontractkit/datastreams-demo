@@ -144,7 +144,11 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                       form.setValue(
                         "to",
                         tokenA === usdcAddress
-                          ? Number(e.target.value) / Number(prices[pair])
+                          ? Math.round(
+                              (Number(e.target.value) + Number.EPSILON) * 100,
+                            ) /
+                              100 /
+                              Number(prices[pair])
                           : Number(e.target.value) * Number(prices[pair]),
                       );
                       field.onChange(e);
@@ -212,7 +216,11 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
                         "from",
                         tokenA === usdcAddress
                           ? Number(e.target.value) * Number(prices[pair])
-                          : Number(e.target.value) / Number(prices[pair]),
+                          : Math.round(
+                              (Number(e.target.value) + Number.EPSILON) * 100,
+                            ) /
+                              100 /
+                              Number(prices[pair]),
                       );
                       field.onChange(e);
                     }}
