@@ -49,12 +49,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
   });
 
   const fromAmount = form.watch("from");
-
-  const { config } = usePrepareSendTransaction({
-    to: wethConfig.address,
-    value: fromAmount ? parseEther(`${fromAmount}`) : undefined,
-  });
-  const { sendTransactionAsync: wrapEth } = useSendTransaction(config);
+  const { sendTransactionAsync: wrapEth } = useSendTransaction();
 
   const { writeAsync: approveWeth } = useContractWrite({
     ...wethConfig,
@@ -94,7 +89,10 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const amountA = parseUnits(`${values.from}`, tokenABalance?.decimals ?? 0);
     const amountB = parseUnits(`${values.to}`, tokenBBalance?.decimals ?? 0);
-    await wrapEth?.();
+    await wrapEth({
+      to: wethConfig.address,
+      value: fromAmount ? parseEther(`${fromAmount}`) : undefined,
+    });
     await approveWeth({
       args: [proxyConfig.address, parseEther(`${fromAmount}`)],
     });
