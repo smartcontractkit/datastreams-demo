@@ -69,7 +69,7 @@ export const DatafeedProvider = ({
         (entry) => entry.feedId === chainlinkPairToFeedId[Pair.ETH_USD],
       );
       if (ethUsd) {
-        setEthUsdPrice(Number(ethUsd.price).toFixed(2));
+        setEthUsdPrice((Number(ethUsd.price) / 10 ** 10).toFixed(2));
         setEthUsdDate(
           format(fromUnixTime(ethUsd.timestamp), "MMM dd, y, HH:mm O"),
         );
@@ -77,32 +77,32 @@ export const DatafeedProvider = ({
     }
   }, [ethData]);
 
-    const { data: linkData } = useSWR<
-      {
-        feedId: string;
-        timestamp: number;
-        price: string;
-      }[]
-    >(
-      `/api/feed/${chainlinkPairToFeedId[Pair.LINK_USD]}
+  const { data: linkData } = useSWR<
+    {
+      feedId: string;
+      timestamp: number;
+      price: string;
+    }[]
+  >(
+    `/api/feed/${chainlinkPairToFeedId[Pair.LINK_USD]}
     `,
-      fetcher,
-      { refreshInterval: 1000 },
-    );
+    fetcher,
+    { refreshInterval: 1000 },
+  );
 
-    useEffect(() => {
-      if (linkData) {
-        const linkUsd = linkData.find(
-          (entry) => entry.feedId === chainlinkPairToFeedId[Pair.LINK_USD],
+  useEffect(() => {
+    if (linkData) {
+      const linkUsd = linkData.find(
+        (entry) => entry.feedId === chainlinkPairToFeedId[Pair.LINK_USD],
+      );
+      if (linkUsd) {
+        setLinkUsdPrice((Number(linkUsd.price) / 10 ** 10).toFixed(2));
+        setLinkUsdDate(
+          format(fromUnixTime(linkUsd.timestamp), "MMM dd, y, HH:mm O"),
         );
-        if (linkUsd) {
-          setLinkUsdPrice(Number(linkUsd.price).toFixed(2));
-          setLinkUsdDate(
-            format(fromUnixTime(linkUsd.timestamp), "MMM dd, y, HH:mm O"),
-          );
-        }
       }
-    }, [linkData]);
+    }
+  }, [linkData]);
 
   return (
     <DatafeedContext.Provider
