@@ -176,9 +176,7 @@ export default function Home() {
                 </div>
               </TableCell>
               {isTradeEnabled && (
-                <TableCell className="rounded-r-md text-right">
-                  <TradeButton pair={Pair.LINK_USD} />
-                </TableCell>
+                <TableCell className="rounded-r-md text-right"></TableCell>
               )}
             </TableRow>
           </TableBody>
