@@ -1,0 +1,29 @@
+name: Contracts
+on:
+    push:
+        branches:
+            - main
+    pull_request: {}
+    workflow_dispatch: {}
+
+jobs:
+    test:
+        name: "Contracts: Unit Tests"
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./contracts
+        env:
+            PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+            INFURA_KEY: ${{ secrets.INFURA_KEY }}
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: 16
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run tests
+              run: npx hardhat test

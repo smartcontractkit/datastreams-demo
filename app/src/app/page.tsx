@@ -121,8 +121,8 @@ export default function Home() {
             <TableRow className="rounded-md bg-[rgb(43,49,60)]/40">
               <TableCell className="rounded-l-md">
                 <div className="flex items-center space-x-2">
-                  <Image src="/link.svg" alt="arb" width={16} height={16} />
-                  <span>LINK/USD</span>
+                  <Image src="/avax.svg" alt="arb" width={16} height={16} />
+                  <span>AVAX/USD</span>
                 </div>
               </TableCell>
               <TableCell>
@@ -138,11 +138,11 @@ export default function Home() {
               </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
-                  <DatafeedData data="price" pair={Pair.LINK_USD} />
+                  <DatafeedData data="price" pair={Pair.AVAX_USD} />
                 </div>
               </TableCell>
               <TableCell>
-                <DatafeedData data="date" pair={Pair.LINK_USD} />
+                <DatafeedData data="date" pair={Pair.AVAX_USD} />
               </TableCell>
               <TableCell
                 width={210}
@@ -158,7 +158,7 @@ export default function Home() {
                     />
                     <ExchangePrice
                       source={ExchangePlatform.BINANCE}
-                      pair={Pair.LINK_USD}
+                      pair={Pair.AVAX_USD}
                     />
                   </div>
                   <div className="flex items-center space-x-2">
@@ -170,15 +170,13 @@ export default function Home() {
                     />
                     <ExchangePrice
                       source={ExchangePlatform.COINBASE}
-                      pair={Pair.LINK_USD}
+                      pair={Pair.AVAX_USD}
                     />
                   </div>
                 </div>
               </TableCell>
               {isTradeEnabled && (
-                <TableCell className="rounded-r-md text-right">
-                  <TradeButton pair={Pair.LINK_USD} />
-                </TableCell>
+                <TableCell className="rounded-r-md text-right"></TableCell>
               )}
             </TableRow>
           </TableBody>
