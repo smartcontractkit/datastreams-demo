@@ -19,7 +19,7 @@ import { DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel } from "@/components//ui/form";
-import { linkAddress, symbols, usdcAddress } from "@/config/trade";
+import { avaxAddress, symbols, usdcAddress } from "@/config/trade";
 import { useDatafeed } from "@/app/datafeed-provider";
 import { Pair } from "@/_types";
 import { useState } from "react";
@@ -35,7 +35,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
   const { address } = useAccount();
   const { prices } = useDatafeed();
   const [tokenA, setTokenA] = useState<Address | undefined>(
-    pair === Pair.LINK_USD ? linkAddress : undefined,
+    pair === Pair.AVAX_USD ? avaxAddress : undefined,
   );
   const [tokenB, setTokenB] = useState<Address | undefined>(usdcAddress);
   const { data: tokenABalance } = useBalance({ address, token: tokenA });

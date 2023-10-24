@@ -6,19 +6,19 @@ export enum ExchangePlatform {
 
 export enum Pair {
   ETH_USD = "ETH-USD",
-  LINK_USD = "LINK-USD",
+  AVAX_USD = "AVAX-USD",
 }
 
 export const binancePairs = {
   [Pair.ETH_USD]: "ETHUSDT",
-  [Pair.LINK_USD]: "LINKUSDT",
+  [Pair.AVAX_USD]: "AVAXUSDT",
 };
 
 export const chainlinkPairToFeedId = {
   [Pair.ETH_USD]:
     "0x00029584363bcf642315133c335b3646513c20f049602fc7d933be0d3f6360d3",
-  [Pair.LINK_USD]:
-    "0x0002191c50b7bdaf2cb8672453141946eea123f8baeaa8d2afa4194b6955e683",
+  [Pair.AVAX_USD]:
+    "0x0002c407f448ffe50a15fd5f1ffe4791830c5f8fa39cd971a3d6ae337aef51a0",
 };
 
 export type PriceResponse = {

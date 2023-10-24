@@ -16,20 +16,20 @@ async function fetcher<JSON = any>(
 type DatafeedContextType = {
   prices: {
     [Pair.ETH_USD]: string;
-    [Pair.LINK_USD]: string;
+    [Pair.AVAX_USD]: string;
   };
   dates: {
     [Pair.ETH_USD]: string;
-    [Pair.LINK_USD]: string;
+    [Pair.AVAX_USD]: string;
   };
 };
 
 const DatafeedContext = createContext<DatafeedContextType>({
   prices: {
     [Pair.ETH_USD]: "",
-    [Pair.LINK_USD]: "",
+    [Pair.AVAX_USD]: "",
   },
-  dates: { [Pair.ETH_USD]: "", [Pair.LINK_USD]: "" },
+  dates: { [Pair.ETH_USD]: "", [Pair.AVAX_USD]: "" },
 });
 
 export const useDatafeed = () => {
@@ -42,11 +42,11 @@ export const DatafeedProvider = ({
   children: React.ReactNode;
 }) => {
   const [ethUsdPrice, setEthUsdPrice] = useState("");
-  const [linkUsdPrice, setLinkUsdPrice] = useState("");
+  const [avaxUsdPrice, setAvaxUsdPrice] = useState("");
   const [ethUsdDate, setEthUsdDate] = useState(
     format(new Date(), "MMM dd, y, HH:mm O"),
   );
-  const [linkUsdDate, setLinkUsdDate] = useState(
+  const [avaxUsdDate, setAvaxUsdDate] = useState(
     format(new Date(), "MMM dd, y, HH:mm O"),
   );
 
@@ -77,40 +77,40 @@ export const DatafeedProvider = ({
     }
   }, [ethData]);
 
-  const { data: linkData } = useSWR<
+  const { data: avaxData } = useSWR<
     {
       feedId: string;
       timestamp: number;
       price: string;
     }[]
   >(
-    `/api/feed/${chainlinkPairToFeedId[Pair.LINK_USD]}
+    `/api/feed/${chainlinkPairToFeedId[Pair.AVAX_USD]}
     `,
     fetcher,
     { refreshInterval: 1000 },
   );
 
   useEffect(() => {
-    if (linkData) {
-      const linkUsd = linkData.find(
-        (entry) => entry.feedId === chainlinkPairToFeedId[Pair.LINK_USD],
+    if (avaxData) {
+      const avaxUsd = avaxData.find(
+        (entry) => entry.feedId === chainlinkPairToFeedId[Pair.AVAX_USD],
       );
-      if (linkUsd) {
-        setLinkUsdPrice((Number(linkUsd.price) / 10 ** 10).toFixed(2));
-        setLinkUsdDate(
-          format(fromUnixTime(linkUsd.timestamp), "MMM dd, y, HH:mm O"),
+      if (avaxUsd) {
+        setAvaxUsdPrice((Number(avaxUsd.price) / 10 ** 10).toFixed(2));
+        setAvaxUsdDate(
+          format(fromUnixTime(avaxUsd.timestamp), "MMM dd, y, HH:mm O"),
         );
       }
     }
-  }, [linkData]);
+  }, [avaxData]);
 
   return (
     <DatafeedContext.Provider
       value={{
-        prices: { [Pair.ETH_USD]: ethUsdPrice, [Pair.LINK_USD]: linkUsdPrice },
+        prices: { [Pair.ETH_USD]: ethUsdPrice, [Pair.AVAX_USD]: avaxUsdPrice },
         dates: {
           [Pair.ETH_USD]: ethUsdDate,
-          [Pair.LINK_USD]: linkUsdDate,
+          [Pair.AVAX_USD]: avaxUsdDate,
         },
       }}
     >
