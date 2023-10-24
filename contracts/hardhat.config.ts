@@ -21,6 +21,7 @@ const config: HardhatUserConfig = {
             chainId: 421613,
             forking: {
                 url: `https://arbitrum-goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+                blockNumber: 49989443,
             },
         },
         goerli: {
