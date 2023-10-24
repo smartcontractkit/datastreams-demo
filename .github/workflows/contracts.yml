@@ -14,7 +14,8 @@ jobs:
             run:
                 working-directory: ./contracts
         env:
-            REPORT_GAS: true
+            PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+            INFURA_KEY: ${{ secrets.INFURA_KEY }}
         steps:
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v2
