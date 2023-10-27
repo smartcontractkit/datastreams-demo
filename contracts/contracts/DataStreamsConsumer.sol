@@ -5,7 +5,7 @@ import {IERC20} from "@uniswap/v2-core/contracts/interfaces/IERC20.sol";
 import {ILogAutomation, Log} from "@chainlink/contracts/src/v0.8/automation/interfaces/ILogAutomation.sol";
 import {StreamsLookupCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/interfaces/StreamsLookupCompatibleInterface.sol";
 import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
-import {IVerifier} from "./interfaces/IVerifier.sol";
+import {IVerifierProxy} from "./interfaces/IVerifierProxy.sol";
 
 /**
  * @title DataStreamsConsumer
@@ -37,7 +37,7 @@ contract DataStreamsConsumer is
 
     address public i_linkToken;
     ISwapRouter public i_router;
-    IVerifier public i_verifier;
+    IVerifierProxy public i_verifier;
 
     // ================================================================
     // |                         STRUCTS                              |
@@ -53,11 +53,12 @@ contract DataStreamsConsumer is
         int192 benchmark;
     }
 
-    struct SwapStruct {
+    struct TradeParamsStruct {
         address recipient;
         address tokenIn;
         address tokenOut;
         uint256 amountIn;
+        string feedId;
     }
 
     struct Quote {
@@ -72,10 +73,17 @@ contract DataStreamsConsumer is
         address msgSender,
         address tokenIn,
         address tokenOut,
-        uint256 amountIn
+        uint256 amountIn,
+        string feedId
     );
 
     event TradeExecuted(uint256 tokensAmount);
+
+    // ================================================================
+    // |                          Errors                              |
+    // ================================================================
+
+    error InvalidFeedId(string feedId);
 
     /**
      * @dev Initializes the contract with necessary parameters.
@@ -92,7 +100,7 @@ contract DataStreamsConsumer is
         string[] memory feedsHex
     ) public {
         i_router = ISwapRouter(router);
-        i_verifier = IVerifier(verifier);
+        i_verifier = IVerifierProxy(verifier);
         i_linkToken = linkToken;
         s_feedsHex = feedsHex;
     }
@@ -108,9 +116,15 @@ contract DataStreamsConsumer is
      * @param tokenIn The input token address.
      * @param tokenOut The output token address.
      * @param amount The amount to trade.
+     * @param feedId data feed of the id you are trading
      */
-    function trade(address tokenIn, address tokenOut, uint256 amount) external {
-        emit InitiateTrade(msg.sender, tokenIn, tokenOut, amount);
+    function trade(
+        address tokenIn,
+        address tokenOut,
+        uint256 amount,
+        string memory feedId
+    ) external {
+        emit InitiateTrade(msg.sender, tokenIn, tokenOut, amount, feedId);
     }
 
     /**
@@ -160,18 +174,20 @@ contract DataStreamsConsumer is
     function performUpkeep(bytes calldata performData) external {
         (
             Report memory unverifiedReport,
-            SwapStruct memory swapParams,
+            TradeParamsStruct memory tradeParams,
             bytes memory bundledReport
         ) = _decodeData(performData);
 
+        // verify tokens
         bytes memory verifiedReportData = i_verifier.verify{
             value: unverifiedReport.nativeFee
-        }(bundledReport);
+        }(bundledReport, abi.encode(i_linkToken));
+        Report memory verifiedReport = abi.decode(verifiedReportData, (Report));
 
         // swap tokens
         uint256 successfullyTradedTokens = _swapTokens(
-            verifiedReportData,
-            swapParams
+            verifiedReport,
+            tradeParams
         );
         emit TradeExecuted(successfullyTradedTokens);
     }
@@ -186,7 +202,7 @@ contract DataStreamsConsumer is
      * and a bundled report.
      * @param performData The data needed for the decoding process.
      * @return signedReport The decoded report from the bundled report data.
-     * @return swapParams The decoded swap parameters.
+     * @return tradeParams The decoded swap parameters.
      * @return bundledReport The bundled report data for verification.
      */
     function _decodeData(
@@ -196,7 +212,7 @@ contract DataStreamsConsumer is
         view
         returns (
             Report memory signedReport,
-            SwapStruct memory swapParams,
+            TradeParamsStruct memory tradeParams,
             bytes memory bundledReport
         )
     {
@@ -204,8 +220,25 @@ contract DataStreamsConsumer is
             performData,
             (bytes[], bytes)
         );
-        swapParams = abi.decode(extraData, (SwapStruct));
-        bundledReport = _bundleReport(signedReports[0]);
+
+        (
+            address sender,
+            address tokenIn,
+            address tokenOut,
+            uint256 amountIn,
+            string memory feedId
+        ) = abi.decode(extraData, (address, address, address, uint256, string));
+
+        tradeParams = TradeParamsStruct({
+            recipient: sender,
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            amountIn: amountIn,
+            feedId: feedId
+        });
+
+        uint256 feedIdIndex = getIdFromFeed(feedId);
+        bundledReport = _bundleReport(signedReports[feedIdIndex]);
         signedReport = _getReportData(bundledReport);
     }
 
@@ -258,6 +291,30 @@ contract DataStreamsConsumer is
         return report;
     }
 
+    /**
+     * @dev Returns the index of a feed ID in the array of feed IDs.
+     * @param feedId The feed id that you are looking for its index
+     * @return The index of the feed ID in the array, or reverts with an error if not found.
+     */
+    function getIdFromFeed(string memory feedId) public view returns (uint256) {
+        uint256 result;
+        string[] storage feeds = s_feedsHex;
+
+        for (uint256 i = 0; i < feeds.length; i++) {
+            if (
+                keccak256(abi.encode(feeds[i])) == keccak256(abi.encode(feedId))
+            ) {
+                result = i;
+                break;
+            }
+            if (i == feeds.length - 1) {
+                revert InvalidFeedId(feedId);
+            }
+        }
+
+        return result;
+    }
+
     // ================================================================
     // |                             SWAP                             |
     // ================================================================
@@ -272,14 +329,14 @@ contract DataStreamsConsumer is
         IERC20 tokenOut,
         int192 priceFromReport
     ) private view returns (uint256) {
-        uint256 pricefeedDecimals = 10;
-        uint256 tokenOutDecimals = tokenOut.decimals();
+        uint256 pricefeedDecimals = 18;
+        uint8 tokenOutDecimals = tokenOut.decimals();
         if (tokenOutDecimals < pricefeedDecimals) {
             uint256 difference = pricefeedDecimals - tokenOutDecimals;
-            return uint256(uint192(priceFromReport)) * 10 ** difference;
+            return uint256(uint192(priceFromReport)) / 10 ** difference;
         } else {
             uint256 difference = tokenOutDecimals - pricefeedDecimals;
-            return uint256(uint192(priceFromReport)) / 10 ** difference;
+            return uint256(uint192(priceFromReport)) * 10 ** difference;
         }
     }
 
@@ -288,40 +345,44 @@ contract DataStreamsConsumer is
      * It first decodes the verified report data to obtain the benchmark price,
      * then transfers tokens from the recipient to this contract, approves the
      * token transfer, and executes the swap using the provided parameters.
-     * @param verifiedReportData The verified report data containing price information.
-     * @param swapParams The parameters for the token swap.
+     * @param verifiedReport The verified report data containing price information.
+     * @param tradeParams The parameters for the token swap.
      * @return The amount of tokens received after the swap.
      */
     function _swapTokens(
-        bytes memory verifiedReportData,
-        SwapStruct memory swapParams
+        Report memory verifiedReport,
+        TradeParamsStruct memory tradeParams
     ) private returns (uint256) {
-        Report memory verifiedReport = abi.decode(verifiedReportData, (Report));
-        uint256 amountOut = _scalePriceToTokenDecimals(
-            IERC20(swapParams.tokenIn),
+        uint8 inputTokenDecimals = IERC20(tradeParams.tokenIn).decimals();
+        uint256 priceForOneToken = _scalePriceToTokenDecimals(
+            IERC20(tradeParams.tokenOut),
             verifiedReport.benchmark
         );
 
-        IERC20(swapParams.tokenIn).transferFrom(
-            swapParams.recipient,
+        uint256 outputAmount = (priceForOneToken * tradeParams.amountIn) /
+            10 ** inputTokenDecimals;
+
+        IERC20(tradeParams.tokenIn).transferFrom(
+            tradeParams.recipient,
             address(this),
-            swapParams.amountIn
+            tradeParams.amountIn
         );
-        IERC20(swapParams.tokenIn).approve(
+        IERC20(tradeParams.tokenIn).approve(
             address(i_router),
-            swapParams.amountIn
+            tradeParams.amountIn
         );
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams(
-                swapParams.tokenIn,
-                swapParams.tokenOut,
+                tradeParams.tokenIn,
+                tradeParams.tokenOut,
                 FEE,
-                swapParams.recipient,
-                swapParams.amountIn,
-                amountOut,
+                tradeParams.recipient,
+                tradeParams.amountIn,
+                outputAmount,
                 0
             );
+
         return i_router.exactInputSingle(params);
     }
 
