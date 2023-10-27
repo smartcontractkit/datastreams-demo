@@ -5,7 +5,7 @@ import {IERC20} from "@uniswap/v2-core/contracts/interfaces/IERC20.sol";
 import {ILogAutomation, Log} from "@chainlink/contracts/src/v0.8/automation/interfaces/ILogAutomation.sol";
 import {StreamsLookupCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/interfaces/StreamsLookupCompatibleInterface.sol";
 import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
-import {IVerifier} from "./interfaces/IVerifier.sol";
+import {IVerifierProxy} from "./interfaces/IVerifierProxy.sol";
 
 /**
  * @title DataStreamsConsumer
@@ -37,7 +37,7 @@ contract DataStreamsConsumer is
 
     address public i_linkToken;
     ISwapRouter public i_router;
-    IVerifier public i_verifier;
+    IVerifierProxy public i_verifier;
 
     // ================================================================
     // |                         STRUCTS                              |
@@ -92,7 +92,7 @@ contract DataStreamsConsumer is
         string[] memory feedsHex
     ) public {
         i_router = ISwapRouter(router);
-        i_verifier = IVerifier(verifier);
+        i_verifier = IVerifierProxy(verifier);
         i_linkToken = linkToken;
         s_feedsHex = feedsHex;
     }
@@ -164,9 +164,11 @@ contract DataStreamsConsumer is
             bytes memory bundledReport
         ) = _decodeData(performData);
 
+        // verify tokens
         bytes memory verifiedReportData = i_verifier.verify{
             value: unverifiedReport.nativeFee
-        }(bundledReport);
+        }(bundledReport, abi.encode(i_linkToken));
+        Report memory verifiedReport = abi.decode(verifiedReportData, (Report));
 
         // swap tokens
         uint256 successfullyTradedTokens = _swapTokens(
