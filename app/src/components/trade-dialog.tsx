@@ -157,9 +157,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
       return;
     }
 
-
     console.log( [tokenA!, tokenB!, parseEther(`${fromAmount}`), feedId] )
-
 
     if (tokenA == wethConfig.address) {
       await wrapEth({
@@ -173,13 +171,13 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
 
     if (tokenA == avaxConfig.address) {
       await approveAvax({
-        args: [avaxConfig.address, parseEther(`${fromAmount}`)],
+        args: [proxyConfig.address, parseEther(`${fromAmount}`)],
       });
     }
 
     if (tokenA == usdcConfig.address) {
       await approveUsdc({
-        args: [usdcConfig.address, parseEther(`${fromAmount}`)],
+        args: [proxyConfig.address, parseEther(`${fromAmount}`)],
       });
     }
 
