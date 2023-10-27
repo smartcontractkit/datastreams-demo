@@ -53,7 +53,7 @@ contract DataStreamsConsumer is
         int192 benchmark;
     }
 
-    struct SwapStruct {
+    struct TradeParamsStruct {
         address recipient;
         address tokenIn;
         address tokenOut;
@@ -73,6 +73,7 @@ contract DataStreamsConsumer is
         address msgSender,
         address tokenIn,
         address tokenOut,
+        uint256 amountIn,
         string feedId
     );
 
@@ -173,7 +174,7 @@ contract DataStreamsConsumer is
     function performUpkeep(bytes calldata performData) external {
         (
             Report memory unverifiedReport,
-            SwapStruct memory swapParams,
+            TradeParamsStruct memory tradeParams,
             bytes memory bundledReport
         ) = _decodeData(performData);
 
@@ -185,8 +186,8 @@ contract DataStreamsConsumer is
 
         // swap tokens
         uint256 successfullyTradedTokens = _swapTokens(
-            verifiedReportData,
-            swapParams
+            verifiedReport,
+            tradeParams
         );
         emit TradeExecuted(successfullyTradedTokens);
     }
@@ -201,7 +202,7 @@ contract DataStreamsConsumer is
      * and a bundled report.
      * @param performData The data needed for the decoding process.
      * @return signedReport The decoded report from the bundled report data.
-     * @return swapParams The decoded swap parameters.
+     * @return tradeParams The decoded swap parameters.
      * @return bundledReport The bundled report data for verification.
      */
     function _decodeData(
@@ -211,7 +212,7 @@ contract DataStreamsConsumer is
         view
         returns (
             Report memory signedReport,
-            SwapStruct memory swapParams,
+            TradeParamsStruct memory tradeParams,
             bytes memory bundledReport
         )
     {
@@ -219,8 +220,23 @@ contract DataStreamsConsumer is
             performData,
             (bytes[], bytes)
         );
+
+        (
+            address sender,
+            address tokenIn,
+            address tokenOut,
+            uint256 amountIn,
             string memory feedId
         ) = abi.decode(extraData, (address, address, address, uint256, string));
+
+        tradeParams = TradeParamsStruct({
+            recipient: sender,
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            amountIn: amountIn,
+            feedId: feedId
+        });
+
         uint256 feedIdIndex = getIdFromFeed(feedId);
         bundledReport = _bundleReport(signedReports[feedIdIndex]);
         signedReport = _getReportData(bundledReport);
@@ -329,40 +345,44 @@ contract DataStreamsConsumer is
      * It first decodes the verified report data to obtain the benchmark price,
      * then transfers tokens from the recipient to this contract, approves the
      * token transfer, and executes the swap using the provided parameters.
-     * @param verifiedReportData The verified report data containing price information.
-     * @param swapParams The parameters for the token swap.
+     * @param verifiedReport The verified report data containing price information.
+     * @param tradeParams The parameters for the token swap.
      * @return The amount of tokens received after the swap.
      */
     function _swapTokens(
-        bytes memory verifiedReportData,
-        SwapStruct memory swapParams
+        Report memory verifiedReport,
+        TradeParamsStruct memory tradeParams
     ) private returns (uint256) {
-        Report memory verifiedReport = abi.decode(verifiedReportData, (Report));
-        uint256 amountOut = _scalePriceToTokenDecimals(
-            IERC20(swapParams.tokenIn),
+        uint8 inputTokenDecimals = IERC20(tradeParams.tokenIn).decimals();
+        uint256 priceForOneToken = _scalePriceToTokenDecimals(
+            IERC20(tradeParams.tokenOut),
             verifiedReport.benchmark
         );
 
-        IERC20(swapParams.tokenIn).transferFrom(
-            swapParams.recipient,
+        uint256 outputAmount = (priceForOneToken * tradeParams.amountIn) /
+            10 ** inputTokenDecimals;
+
+        IERC20(tradeParams.tokenIn).transferFrom(
+            tradeParams.recipient,
             address(this),
-            swapParams.amountIn
+            tradeParams.amountIn
         );
-        IERC20(swapParams.tokenIn).approve(
+        IERC20(tradeParams.tokenIn).approve(
             address(i_router),
-            swapParams.amountIn
+            tradeParams.amountIn
         );
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
             .ExactInputSingleParams(
-                swapParams.tokenIn,
-                swapParams.tokenOut,
+                tradeParams.tokenIn,
+                tradeParams.tokenOut,
                 FEE,
-                swapParams.recipient,
-                swapParams.amountIn,
-                amountOut,
+                tradeParams.recipient,
+                tradeParams.amountIn,
+                outputAmount,
                 0
             );
+
         return i_router.exactInputSingle(params);
     }
 
