@@ -99,7 +99,7 @@ For your convenience the deploy script has all the constructor arguments filled 
 
 After deploying the `DataStreamsConsumer` contract you should register your upkeep by following [Chainlink's guide](https://docs.chain.link/data-streams/getting-started#register-the-upkeep). In our use case "Contract to automate" and "Contract emitting logs" are the same contract i.e `DataStreamsConsumer`. When you choose "Contract emitting logs" you should click the "use custom ABI instead?" option and send the `DataStreamsConsumer.sol` ABI from the `artifacts/contracts/DataStreamsConsumer.sol/DataStreamsConsumer.json` file. After sending the ABI you will have to pick an emitted log. Pick the `InitiateTrade` option from the select with the events options and continue registering your upkeep.
 
-You should set an initiale balance of at least 2 LINK. The other inputs are optional and you can enter whatever value you want.
+You should set an initial balance of at least 2 LINK. The other inputs are optional and you can enter whatever value you want.
 
 ## Emit a log
 
