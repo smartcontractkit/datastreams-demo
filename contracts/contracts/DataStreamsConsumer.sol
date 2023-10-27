@@ -313,14 +313,14 @@ contract DataStreamsConsumer is
         IERC20 tokenOut,
         int192 priceFromReport
     ) private view returns (uint256) {
-        uint256 pricefeedDecimals = 10;
-        uint256 tokenOutDecimals = tokenOut.decimals();
+        uint256 pricefeedDecimals = 18;
+        uint8 tokenOutDecimals = tokenOut.decimals();
         if (tokenOutDecimals < pricefeedDecimals) {
             uint256 difference = pricefeedDecimals - tokenOutDecimals;
-            return uint256(uint192(priceFromReport)) * 10 ** difference;
+            return uint256(uint192(priceFromReport)) / 10 ** difference;
         } else {
             uint256 difference = tokenOutDecimals - pricefeedDecimals;
-            return uint256(uint192(priceFromReport)) / 10 ** difference;
+            return uint256(uint192(priceFromReport)) * 10 ** difference;
         }
     }
 
