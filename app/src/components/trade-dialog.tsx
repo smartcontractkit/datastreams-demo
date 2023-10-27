@@ -157,8 +157,6 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
       return;
     }
 
-    console.log( [tokenA!, tokenB!, parseEther(`${fromAmount}`), feedId] )
-
     if (tokenA == wethConfig.address) {
       await wrapEth({
         to: wethConfig.address,
