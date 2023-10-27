@@ -58,6 +58,7 @@ contract DataStreamsConsumer is
         address tokenIn;
         address tokenOut;
         uint256 amountIn;
+        string feedId;
     }
 
     struct Quote {
@@ -72,10 +73,16 @@ contract DataStreamsConsumer is
         address msgSender,
         address tokenIn,
         address tokenOut,
-        uint256 amountIn
+        string feedId
     );
 
     event TradeExecuted(uint256 tokensAmount);
+
+    // ================================================================
+    // |                          Errors                              |
+    // ================================================================
+
+    error InvalidFeedId(string feedId);
 
     /**
      * @dev Initializes the contract with necessary parameters.
@@ -108,9 +115,15 @@ contract DataStreamsConsumer is
      * @param tokenIn The input token address.
      * @param tokenOut The output token address.
      * @param amount The amount to trade.
+     * @param feedId data feed of the id you are trading
      */
-    function trade(address tokenIn, address tokenOut, uint256 amount) external {
-        emit InitiateTrade(msg.sender, tokenIn, tokenOut, amount);
+    function trade(
+        address tokenIn,
+        address tokenOut,
+        uint256 amount,
+        string memory feedId
+    ) external {
+        emit InitiateTrade(msg.sender, tokenIn, tokenOut, amount, feedId);
     }
 
     /**
@@ -206,8 +219,10 @@ contract DataStreamsConsumer is
             performData,
             (bytes[], bytes)
         );
-        swapParams = abi.decode(extraData, (SwapStruct));
-        bundledReport = _bundleReport(signedReports[0]);
+            string memory feedId
+        ) = abi.decode(extraData, (address, address, address, uint256, string));
+        uint256 feedIdIndex = getIdFromFeed(feedId);
+        bundledReport = _bundleReport(signedReports[feedIdIndex]);
         signedReport = _getReportData(bundledReport);
     }
 
@@ -258,6 +273,30 @@ contract DataStreamsConsumer is
 
         Report memory report = abi.decode(reportData, (Report));
         return report;
+    }
+
+    /**
+     * @dev Returns the index of a feed ID in the array of feed IDs.
+     * @param feedId The feed id that you are looking for its index
+     * @return The index of the feed ID in the array, or reverts with an error if not found.
+     */
+    function getIdFromFeed(string memory feedId) public view returns (uint256) {
+        uint256 result;
+        string[] storage feeds = s_feedsHex;
+
+        for (uint256 i = 0; i < feeds.length; i++) {
+            if (
+                keccak256(abi.encode(feeds[i])) == keccak256(abi.encode(feedId))
+            ) {
+                result = i;
+                break;
+            }
+            if (i == feeds.length - 1) {
+                revert InvalidFeedId(feedId);
+            }
+        }
+
+        return result;
     }
 
     // ================================================================
