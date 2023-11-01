@@ -9,7 +9,6 @@ import {
   useAccount,
   useBalance,
   useContractWrite,
-  usePrepareSendTransaction,
   useSendTransaction,
 } from "wagmi";
 
@@ -29,6 +28,7 @@ import {
   usdcConfig,
   avaxConfig,
 } from "@/config/contracts";
+import { Check } from "lucide-react";
 
 const formSchema = z.object({
   from: z.coerce.number().gt(0),
@@ -37,6 +37,7 @@ const formSchema = z.object({
 
 const TradeDialog = ({ pair }: { pair: Pair }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [txHash, setTxHash] = useState<Address | undefined>();
   const { address } = useAccount();
   const { prices } = useDatafeed();
   const [tokenA, setTokenA] = useState<Address | undefined>(
@@ -179,7 +180,7 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
       });
     }
 
-    await trade({
+    const result = await trade({
       args: [tokenA!, tokenB!, parseEther(`${fromAmount}`), feedId],
     });
     toast({
@@ -188,9 +189,31 @@ const TradeDialog = ({ pair }: { pair: Pair }) => {
       variant: "success",
     });
     setIsLoading(false);
+    setTxHash(result.hash);
   }
 
-  return (
+  return txHash ? (
+    <div className="flex h-96 flex-col items-center justify-center">
+      <Check className="rounded-full bg-[#2FB96C] p-2" width={60} height={60} />
+      <h3 className="my-3 text-xl font-medium">Swap completed!</h3>
+      <a
+        href={`https://goerli.arbiscan.io/tx/${txHash}`}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-4 flex items-center space-x-[8px] text-base font-bold leading-4 underline hover:brightness-125"
+      >
+        <span className="text-sm font-bold leading-4 text-white">
+          View on Explorer
+        </span>
+        <Image
+          src="/external-link.svg"
+          width={12}
+          height={12}
+          alt="external-link"
+        />
+      </a>
+    </div>
+  ) : (
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
