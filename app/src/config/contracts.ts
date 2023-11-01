@@ -478,7 +478,7 @@ export const avaxConfig = {
 } as const;
 
 export const proxyConfig = {
-  address: "0xb017Bd229423af4a836baEBBB01110918e1E091A",
+  address: "0xcB2c15CEe8309A2442a1b0B35c475e1531C4CFE4",
   abi: [
     {
       inputs: [
