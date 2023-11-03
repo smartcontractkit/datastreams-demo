@@ -66,7 +66,8 @@ export default function RootLayout({
                 <div className="flex items-center space-x-2 text-sm font-medium">
                   <div className="rounded-[2px] bg-[#375BD2] px-1">NEW</div>
                   <div>
-                  Data Streams is now available in mainnet early access for developers.&nbsp;
+                    Data Streams is now available in mainnet early access for
+                    developers.&nbsp;
                     <a
                       href="https://chainlinkcommunity.typeform.com/datastreams?ref_id=demoapp"
                       target="_blank"
@@ -81,88 +82,109 @@ export default function RootLayout({
               <div className="container max-w-[1440px] bg-[url('/honeycomb.svg')] bg-right-top bg-no-repeat px-6 md:px-16">
                 <Toaster />
                 <main>{children}</main>
-                <footer className="mb-4 mt-6 rounded-md border bg-[rgb(24,29,41)]/60 p-10 md:mb-16">
-                  <div
-                    className={cn(
-                      "space-y-6 md:grid md:space-y-0",
-                      isTradeEnabled ? "md:grid-cols-3" : "md:grid-cols-2",
-                    )}
-                  >
+                <footer>
+                  <div className="mb-4 mt-6 rounded-md border bg-[rgb(24,29,41)]/60 p-10 md:mb-4">
                     <div
                       className={cn(
-                        "pb-10 md:pb-0 md:pr-10",
-                        isTradeEnabled
-                          ? ""
-                          : "border-b md:border-b-0 md:border-r",
+                        "space-y-6 md:grid md:space-y-0",
+                        isTradeEnabled ? "md:grid-cols-3" : "md:grid-cols-2",
                       )}
                     >
-                      <h3 className="mb-6 text-xl font-medium">Purpose</h3>
-                      <p className="text-base font-[450] text-muted-foreground">
-                        This dApp will show you how to use Chainlink Data
-                        Streams to use low-latency data feeds in your dApp.
-                      </p>
-                    </div>
-                    {isTradeEnabled && (
-                      <div className="border-y py-10 md:border-x md:border-y-0 md:px-10 md:py-0">
-                        <h3 className="mb-6 text-xl font-medium">
-                          Getting started
-                        </h3>
-                        <div className="space-y-4 text-base font-[450] text-muted-foreground">
-                          <p className="flex space-x-2">
-                            <span>1. Connect your wallet</span>
-                            <span className="flex space-x-2 rounded bg-muted px-2 py-1">
-                              <Image
-                                src="/metamask.svg"
-                                width={16}
-                                height={16}
-                                alt="metamask"
-                              />
-                              <Image
-                                src="/walletconnect.svg"
-                                width={16}
-                                height={16}
-                                alt="walletconnect"
-                              />
-                            </span>
-                          </p>
-                          <p>2. Select a token pair to trade</p>
-                          <p>3. Swap the amount of tokens desired</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="md:pl-10">
-                      <h3 className="mb-6 text-xl font-medium">
-                        For Developers
-                      </h3>
-                      <p className="text-base font-[450] text-muted-foreground">
-                        This dApp is built using Chainlink Data Streams. It
-                        enables developers to use low-latency data feeds in
-                        their smart contracts. Learn how to build a full-stack
-                        dApp with Chainlink Data Streams.
-                      </p>
-                      <a
-                        href="https://github.com/smartcontractkit/datastreams-demo"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-4 flex items-center space-x-[8px] text-base font-bold leading-4 underline hover:brightness-125"
+                      <div
+                        className={cn(
+                          "pb-10 md:pb-0 md:pr-10",
+                          isTradeEnabled
+                            ? ""
+                            : "border-b md:border-b-0 md:border-r",
+                        )}
                       >
-                        <Image
-                          src="/github.svg"
-                          width={16}
-                          height={16}
-                          alt="github"
-                        />
-                        <span className="text-sm font-bold leading-4 text-white">
-                          Go to Repository
-                        </span>
-                        <Image
-                          src="/external-link.svg"
-                          width={12}
-                          height={12}
-                          alt="external-link"
-                        />
-                      </a>
+                        <h3 className="mb-6 text-xl font-medium">Purpose</h3>
+                        <p className="text-base font-[450] text-muted-foreground">
+                          This dApp will show you how to use Chainlink Data
+                          Streams to use low-latency data feeds in your dApp.
+                        </p>
+                      </div>
+                      {isTradeEnabled && (
+                        <div className="border-y py-10 md:border-x md:border-y-0 md:px-10 md:py-0">
+                          <h3 className="mb-6 text-xl font-medium">
+                            Getting started
+                          </h3>
+                          <div className="space-y-4 text-base font-[450] text-muted-foreground">
+                            <p className="flex space-x-2">
+                              <span>1. Connect your wallet</span>
+                              <span className="flex space-x-2 rounded bg-muted px-2 py-1">
+                                <Image
+                                  src="/metamask.svg"
+                                  width={16}
+                                  height={16}
+                                  alt="metamask"
+                                />
+                                <Image
+                                  src="/walletconnect.svg"
+                                  width={16}
+                                  height={16}
+                                  alt="walletconnect"
+                                />
+                              </span>
+                            </p>
+                            <p>2. Select a token pair to trade</p>
+                            <p>3. Swap the amount of tokens desired</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="md:pl-10">
+                        <h3 className="mb-6 text-xl font-medium">
+                          For Developers
+                        </h3>
+                        <p className="text-base font-[450] text-muted-foreground">
+                          This dApp is built using Chainlink Data Streams. It
+                          enables developers to use low-latency data feeds in
+                          their smart contracts. Learn how to build a full-stack
+                          dApp with Chainlink Data Streams.
+                        </p>
+                        <a
+                          href="https://github.com/smartcontractkit/datastreams-demo"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-4 flex items-center space-x-[8px] text-base font-bold leading-4 underline hover:brightness-125"
+                        >
+                          <Image
+                            src="/github.svg"
+                            width={16}
+                            height={16}
+                            alt="github"
+                          />
+                          <span className="text-sm font-bold leading-4 text-white">
+                            Go to Repository
+                          </span>
+                          <Image
+                            src="/external-link.svg"
+                            width={12}
+                            height={12}
+                            alt="external-link"
+                          />
+                        </a>
+                      </div>
                     </div>
+                  </div>
+                  <div className="mb-4 mt-6 rounded-md border bg-[rgb(24,29,41)]/60 p-10 md:mb-16">
+                    <h3 className="mb-6 text-xl font-medium">Disclaimer</h3>
+                    <p className="italic text-sm">
+                      This demo represents an educational example to use a
+                      Chainlink system, product, or service and is provided to
+                      demonstrate how to interact with Chainlink’s systems,
+                      products, and services to integrate them into your own.
+                      This template is provided “AS IS” and “AS AVAILABLE”
+                      without warranties of any kind, it has not been audited,
+                      and it may bne missing key checks or error handling to
+                      make the usage of the system, product or service more
+                      clear. Do not use the code in this example in a production
+                      environment without completing your own adults and
+                      application of best practices. Neither Chainlink Labs, the
+                      Chainlink Foundation, nor Chainlink node operators are
+                      responsible for unintended outputs that are generated due
+                      to errors in the code.
+                    </p>
                   </div>
                 </footer>
               </div>
