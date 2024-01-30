@@ -21,7 +21,7 @@ export default function Home() {
         Chainlink Data Streams Demo dApp
       </h2>
       <p className="hidden font-[450] text-muted-foreground md:block">
-        Low-latency, high frequency, gas efficient data feeds on Arbitrum Goerli
+        Low-latency, high frequency, gas efficient data feeds on Arbitrum Sepolia
         Testnet.
       </p>
       <div className="rounded-md border bg-[rgb(24,29,41)]/60 p-6">
@@ -70,7 +70,7 @@ export default function Home() {
                     width={16}
                     height={16}
                   />
-                  <span>Arbitrum Goerli</span>
+                  <span>Arbitrum Sepolia</span>
                 </div>
               </TableCell>
               <TableCell>
@@ -133,7 +133,7 @@ export default function Home() {
                     width={16}
                     height={16}
                   />
-                  <span>Arbitrum Goerli</span>
+                  <span>Arbitrum Sepolia</span>
                 </div>
               </TableCell>
               <TableCell>
