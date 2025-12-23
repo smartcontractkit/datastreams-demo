@@ -18,7 +18,10 @@ export async function GET(
       {
         feedId,
         timestamp: Number(report.observationsTimestamp),
-        price: formatUnits(report.benchmarkPrice, 8),
+        price: formatUnits(
+          report.version === "v4" ? report.price : report.benchmarkPrice,
+          8,
+        ),
       },
     ]);
   } catch (error: any) {
